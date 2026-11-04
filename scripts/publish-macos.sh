@@ -35,6 +35,8 @@ cp -R "$app" "$staging/SupplyPlanner-demo/"
 cp examples/*.json "$staging/SupplyPlanner-demo/examples/"
 cp docs/QUICKSTART.md "$staging/SupplyPlanner-demo/READ-ME.md"
 cp docs/DATA_FORMAT.md "$staging/SupplyPlanner-demo/DATA_FORMAT.md"
+# В архиве инструкция лежит рядом с examples, а в исходниках — в docs.
+sed 's#(\.\./examples/#(examples/#g' docs/SELLERSTATUS_AND_SETUP.md > "$staging/SupplyPlanner-demo/SELLERSTATUS_AND_SETUP.md"
 archive="SupplyPlanner-$version-$rid.zip"
 ditto -c -k --keepParent "$staging/SupplyPlanner-demo" "$staging/$archive"
 # Архив содержит только приложение и вымышленные примеры, без локальных состояний.
