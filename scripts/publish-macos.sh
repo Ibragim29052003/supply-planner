@@ -10,7 +10,7 @@ case "$rid" in osx-arm64|osx-x64) ;; *) echo "Архитектура: osx-arm64 
 export DOTNET_CLI_HOME="$PWD/.runtime/dotnet-home"
 export NUGET_PACKAGES="$PWD/.runtime/packages"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
-version="1.0.0"
+version="1.0.1"
 output="$PWD/output/release/$rid"
 mkdir -p "$output"
 # Собираем в отдельной папке: сбой publish не затронет предыдущий архив релиза.

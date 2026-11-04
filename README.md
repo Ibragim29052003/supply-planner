@@ -6,6 +6,7 @@ ChatBot WB, браузер, серверы и токены маркетплей�
 
 Полный сценарий запуска, импорта, проверки Excel и защиты: [пошаговая инструкция](docs/QUICKSTART.md).
 Формат данных: [DATA_FORMAT.md](docs/DATA_FORMAT.md).
+Установка, все JSON и реальная связь с сервисом: [SELLERSTATUS_AND_SETUP.md](docs/SELLERSTATUS_AND_SETUP.md).
 
 ## Запуск
 
@@ -118,11 +119,11 @@ docs/                             требования, защита, архит
 
 ## Репозиторий и готовая сборка
 
-Личный репозиторий: https://github.com/Ibragim29052003/supply-planner (закрытый).
-Для просмотра преподавателю потребуется доступ либо демонстрация с компьютера владельца.
+Личный репозиторий: https://github.com/Ibragim29052003/supply-planner (публичный).
+Преподаватель может открыть код без приглашения в репозиторий.
 История коммитов отражает перенос рабочей версии и последующие реальные исправления.
 
-Сборка для Mac с Apple Silicon: [релиз v1.0.0](https://github.com/Ibragim29052003/supply-planner/releases/tag/v1.0.0). Это .app со своим
+Сборка для Mac с Apple Silicon: [релиз v1.0.1](https://github.com/Ibragim29052003/supply-planner/releases/tag/v1.0.1). Это .app со своим
 .NET runtime, а не веб-сайт. Её упаковку можно воспроизвести на Mac:
 
 ```bash
