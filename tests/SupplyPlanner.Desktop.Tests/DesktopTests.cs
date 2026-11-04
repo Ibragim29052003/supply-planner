@@ -101,12 +101,50 @@ public sealed class DesktopTests
         {
             window.Width=width; window.Height=height; Application.Current!.RequestedThemeVariant=theme;
             Dispatcher.UIThread.RunJobs();
+            var parameters = window.FindControl<ScrollViewer>("ParametersScroll")!;
+            var scrollbar = parameters.GetVisualDescendants().OfType<Avalonia.Controls.Primitives.ScrollBar>()
+                .Single(b => b.Orientation == Avalonia.Layout.Orientation.Vertical && ReferenceEquals(b.TemplatedParent, parameters));
+            var scrollbarLeft = scrollbar.TranslatePoint(default, window)!.Value.X;
+            foreach (var control in new Control[] { window.FindControl<TextBox>("ScenarioNameInput")!, window.FindControl<ComboBox>("ForecastStrategySelect")! })
+            {
+                var right = control.TranslatePoint(new Point(control.Bounds.Width, 0), window)!.Value.X;
+                Assert.True(scrollbarLeft - right >= 7, $"Scrollbar overlaps {control.Name}: gap={scrollbarLeft - right}");
+            }
             using var frame=window.CaptureRenderedFrame(); Assert.NotNull(frame);
             if (artifact is not null) { Directory.CreateDirectory(artifact); frame.Save(Path.Combine(artifact,"desktop-"+label+".png")); }
             foreach(var button in window.GetVisualDescendants().OfType<Button>().Where(b=>b.IsVisible && b.Content is string s && s is "Открыть…" or "Сохранить…" or "Справка · F1"))
             { var point=button.TranslatePoint(default,window)!.Value; Assert.InRange(point.X,0,width-button.Bounds.Width+1); Assert.True(button.Bounds.Height>=36); }
         }
         window.Close();
+    }
+    [AvaloniaFact]
+    public void WarehouseFilterShowsDefaultAndRestoresSavedSelectionAfterOpeningFiles()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "planner-warehouse-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "source.json");
+        var state = Path.Combine(directory, "state.supply.json");
+        ProjectFiles.WriteAtomic(path, System.Text.Json.JsonSerializer.Serialize(ProjectFiles.Example(), ScenarioJson.Options));
+        var window = new MainWindow();
+        try
+        {
+            window.Model.Open(path); window.Show(); Dispatcher.UIThread.RunJobs();
+            var combo = window.FindControl<ComboBox>("WarehouseFilter")!;
+            Assert.Equal("Все склады", combo.SelectedItem);
+            for (var n = 0; n < 2; n++)
+            {
+                window.Model.Example(); Dispatcher.UIThread.RunJobs();
+                Assert.Equal("Все склады", combo.SelectedItem);
+                window.Model.Open(path); Dispatcher.UIThread.RunJobs();
+                Assert.Equal("Все склады", combo.SelectedItem);
+            }
+            combo.SelectedItem = "Казань"; Dispatcher.UIThread.RunJobs(); window.Model.Save(state);
+            window.Model.Open(state); Dispatcher.UIThread.RunJobs();
+            Assert.Equal("Казань", combo.SelectedItem); Assert.Contains("132", window.Model.Summary);
+            window.Model.Open(path); Dispatcher.UIThread.RunJobs();
+            Assert.Equal("Все склады", combo.SelectedItem); Assert.Contains("692", window.Model.Summary);
+        }
+        finally { window.Close(); Directory.Delete(directory, true); }
     }
     [AvaloniaFact]
     public void HelpShortcutAndSourceTabAreAvailableAndChartRenders()

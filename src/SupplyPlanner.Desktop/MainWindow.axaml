@@ -11,10 +11,10 @@
     </Grid>
     <Border Grid.Row="1" Classes="panel" Classes.error="{Binding IsError}" Padding="12"><StackPanel Spacing="4"><TextBlock Text="{Binding Message}" TextWrapping="Wrap" /><TextBlock Text="{Binding DraftNotice}" Classes="muted" FontSize="12" /></StackPanel></Border>
     <Grid Grid.Row="2" ColumnDefinitions="250,*" ColumnSpacing="18">
-      <Border Classes="panel"><ScrollViewer HorizontalScrollBarVisibility="Disabled"><StackPanel Spacing="9">
+      <Border Classes="panel" Padding="18,18,6,18"><ScrollViewer x:Name="ParametersScroll" HorizontalScrollBarVisibility="Disabled"><StackPanel Spacing="9" Margin="0,0,24,0">
         <TextBlock Text="Параметры плана" Classes="section" Margin="0,0,0,8" />
-        <TextBlock Text="Название сценария" Classes="muted" /><TextBox Text="{Binding Name}" />
-        <TextBlock Text="Метод прогноза" Classes="muted" /><ComboBox ItemsSource="{Binding Strategies}" SelectedItem="{Binding Strategy}" />
+        <TextBlock Text="Название сценария" Classes="muted" /><TextBox x:Name="ScenarioNameInput" Text="{Binding Name}" />
+        <TextBlock Text="Метод прогноза" Classes="muted" /><ComboBox x:Name="ForecastStrategySelect" ItemsSource="{Binding Strategies}" SelectedItem="{Binding Strategy}" />
         <TextBlock Text="Доставка, дней" Classes="muted" /><TextBox Text="{Binding Lead}" />
         <TextBlock Text="Запас после прибытия, дней" Classes="muted" /><TextBox Text="{Binding Target}" />
         <TextBlock Text="Страховой запас, дней" Classes="muted" /><TextBox Text="{Binding Safety}" />
@@ -30,7 +30,7 @@
             <Border Classes="panel"><StackPanel Spacing="8"><TextBlock Text="{Binding Summary}" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock Text="{Binding WarehouseSummary}" Foreground="#7298FF" TextWrapping="Wrap" /></StackPanel></Border>
             <WrapPanel>
               <TextBox x:Name="PlanSearch" Width="230" Watermark="Название, артикул или склад" Text="{Binding Search}" Margin="0,0,8,8" />
-              <ComboBox Width="150" ItemsSource="{Binding Warehouses}" SelectedItem="{Binding Warehouse}" Margin="0,0,8,8" />
+              <ComboBox x:Name="WarehouseFilter" Width="150" ItemsSource="{Binding Warehouses}" SelectedItem="{Binding Warehouse}" Margin="0,0,8,8" />
               <ComboBox Width="155" ItemsSource="{Binding Statuses}" SelectedItem="{Binding StatusChoice}" Margin="0,0,8,8" />
               <ComboBox Width="170" ItemsSource="{Binding Sorts}" SelectedItem="{Binding Sort}" Margin="0,0,8,8" />
               <Button Content="Сбросить" Command="{Binding ResetFiltersCommand}" />

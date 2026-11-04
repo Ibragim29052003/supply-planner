@@ -72,7 +72,7 @@ public sealed class PlannerViewModel : ObservableObject
     public bool HasUnsavedChanges { get; private set; }
     private string _message = "Учебный пример загружен. Измените данные или откройте свой JSON.";
     private bool _error;
-    private string _search = "", _warehouse = "", _status = "", _name = "", _lead = "7", _target = "30", _safety = "3", _pack = "1", _history = "3";
+    private string _search = "", _warehouse = "Все склады", _status = "", _name = "", _lead = "7", _target = "30", _safety = "3", _pack = "1", _history = "3";
     private Choice _strategy = new("average", "Средний спрос");
     private Choice _sort = new("priority", "Сначала срочные");
     private Choice _statusChoice = new("", "Все оценки");
@@ -83,7 +83,7 @@ public sealed class PlannerViewModel : ObservableObject
     public ObservableCollection<DayRow> Days { get; } = [];
     public ObservableCollection<DeliveryRow> Deliveries { get; } = [];
     public ObservableCollection<JournalEntry> Journal { get; } = [];
-    public ObservableCollection<string> Warehouses { get; } = [];
+    public ObservableCollection<string> Warehouses { get; } = ["Все склады"];
     public IReadOnlyList<Choice> Strategies { get; } = [new("average", "Средний спрос"), new("weighted", "С учётом последних дней")];
     public IReadOnlyList<Choice> Sorts { get; } = [new("priority", "Сначала срочные"), new("quantity", "Количество ↓"), new("dispatch", "Срок отправки"), new("demand", "Спрос ↓"), new("name", "Название")];
     public IReadOnlyList<Choice> Statuses { get; } = [new("", "Все оценки"), new("urgent", "Ранняя доставка"), new("replenish", "Пополнить"), new("unknown", "Нет оценки"), new("healthy", "Достаточно"), new("no-demand", "Нет спроса")];
@@ -204,8 +204,17 @@ public sealed class PlannerViewModel : ObservableObject
         Sources.Clear();
         foreach (var product in scenario.Products)
         { var row = new SourceRow(product); row.PropertyChanged += (_, _) => Dirty(); Sources.Add(row); }
-        Warehouses.Clear(); Warehouses.Add("Все склады");
-        foreach (var name in scenario.Products.Select(p => PlanQuery.WarehouseName(p.Warehouse)).Distinct().Order()) Warehouses.Add(name);
+        // «Все склады» остаётся в коллекции: Clear сбрасывал выбор ComboBox при загрузке JSON.
+        var warehouseNames = new[] { "Все склады" }.Concat(scenario.Products
+            .Select(p => PlanQuery.WarehouseName(p.Warehouse)).Distinct().Order()).Distinct().ToArray();
+        for (var i = Warehouses.Count - 1; i >= 1; i--)
+            if (!warehouseNames.Contains(Warehouses[i])) Warehouses.RemoveAt(i);
+        for (var i = 1; i < warehouseNames.Length; i++)
+        {
+            var previous = Warehouses.IndexOf(warehouseNames[i]);
+            if (previous < 0) Warehouses.Insert(i, warehouseNames[i]);
+            else if (previous != i) Warehouses.Move(previous, i);
+        }
         _search = view.Search; _warehouse = Warehouses.Contains(view.Warehouse) ? view.Warehouse : "Все склады";
         _statusChoice = Statuses.FirstOrDefault(s => s.Id == view.Status) ?? Statuses[0]; _status = _statusChoice.Id;
         _sort = Sorts.FirstOrDefault(s => s.Id == view.Sort) ?? Sorts[0];
