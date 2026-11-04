@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../SupplyPlanner.Core/SupplyPlanner.Core.csproj" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+  </ItemGroup>
+  <ItemGroup><EmbeddedResource Include="../../examples/01-base.json" LogicalName="SupplyPlanner.Example.json" /></ItemGroup>
+</Project>

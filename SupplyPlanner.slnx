@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SupplyPlanner.Cli/SupplyPlanner.Cli.csproj" />
+    <Project Path="src/SupplyPlanner.Core/SupplyPlanner.Core.csproj" />
+    <Project Path="src/SupplyPlanner.Desktop/SupplyPlanner.Desktop.csproj" />
+    <Project Path="src/SupplyPlanner.Infrastructure/SupplyPlanner.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SupplyPlanner.Desktop.Tests/SupplyPlanner.Desktop.Tests.csproj" />
+    <Project Path="tests/SupplyPlanner.Tests/SupplyPlanner.Tests.csproj" />
+  </Folder>
+</Solution>

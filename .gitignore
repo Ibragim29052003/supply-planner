@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.runtime/
+output/
+archives/
+TestResults/
+*.user
+.DS_Store
+*.supply.json
+!examples/*.supply.json

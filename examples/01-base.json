@@ -1,0 +1,146 @@
+{
+  "name": "Защита · два склада",
+  "source": "Вымышленные учебные данные: полный спрос в штуках",
+  "isDemo": false,
+  "startDate": "2026-10-13",
+  "snapshotAt": "2026-10-13T00:00:00+03:00",
+  "settings": {
+    "leadDays": 7,
+    "targetDays": 30,
+    "safetyDays": 3,
+    "packSize": 1,
+    "historyDays": 3,
+    "strategy": "average"
+  },
+  "products": [
+    {
+      "id": "SHIRT-KOL",
+      "name": "Футболка базовая",
+      "stock": 100,
+      "article": "WB-1001",
+      "warehouse": "Коледино",
+      "history": [
+        {
+          "date": "2026-10-10",
+          "quantity": 10,
+          "isComplete": true
+        },
+        {
+          "date": "2026-10-11",
+          "quantity": 10,
+          "isComplete": true
+        },
+        {
+          "date": "2026-10-12",
+          "quantity": 10,
+          "isComplete": true
+        }
+      ]
+    },
+    {
+      "id": "SHIRT-KZN",
+      "name": "Футболка базовая",
+      "stock": 20,
+      "article": "WB-1001",
+      "warehouse": "Казань",
+      "history": [
+        {
+          "date": "2026-10-10",
+          "quantity": 4,
+          "isComplete": true
+        },
+        {
+          "date": "2026-10-11",
+          "quantity": 4,
+          "isComplete": true
+        },
+        {
+          "date": "2026-10-12",
+          "quantity": 4,
+          "isComplete": true
+        }
+      ]
+    },
+    {
+      "id": "HOODIE-KOL",
+      "name": "Худи · растущий спрос",
+      "stock": 100,
+      "article": "WB-1002",
+      "warehouse": "Коледино",
+      "history": [
+        {
+          "date": "2026-10-10",
+          "quantity": 6,
+          "isComplete": true
+        },
+        {
+          "date": "2026-10-11",
+          "quantity": 9,
+          "isComplete": true
+        },
+        {
+          "date": "2026-10-12",
+          "quantity": 12,
+          "isComplete": true
+        }
+      ]
+    },
+    {
+      "id": "HAT-KZN",
+      "name": "Шапка · поставка вовремя",
+      "stock": 45,
+      "article": "WB-1005",
+      "warehouse": "Казань",
+      "history": [
+        {
+          "date": "2026-10-10",
+          "quantity": 5,
+          "isComplete": true
+        },
+        {
+          "date": "2026-10-11",
+          "quantity": 5,
+          "isComplete": true
+        },
+        {
+          "date": "2026-10-12",
+          "quantity": 5,
+          "isComplete": true
+        }
+      ]
+    },
+    {
+      "id": "BAG-KOL",
+      "name": "Сумка · неизвестный остаток",
+      "stock": null,
+      "article": "WB-1007",
+      "warehouse": "Коледино",
+      "history": [
+        {
+          "date": "2026-10-10",
+          "quantity": 2,
+          "isComplete": true
+        },
+        {
+          "date": "2026-10-11",
+          "quantity": 2,
+          "isComplete": true
+        },
+        {
+          "date": "2026-10-12",
+          "quantity": 2,
+          "isComplete": true
+        }
+      ]
+    }
+  ],
+  "deliveries": [
+    {
+      "id": "hat-incoming",
+      "productId": "HAT-KZN",
+      "arrivalDate": "2026-10-18",
+      "quantity": 160,
+      "status": 0
+    }
+  ]
+}

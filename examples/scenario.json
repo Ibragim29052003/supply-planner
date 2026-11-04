@@ -1,0 +1,28 @@
+{
+  "name": "Пример для ручной проверки",
+  "source": "Вымышленный полный спрос: неотменённые заказы в штуках",
+  "isDemo": false,
+  "startDate": "2026-10-13",
+  "snapshotAt": "2026-10-13T00:00:00+03:00",
+  "settings": {
+    "leadDays": 7,
+    "targetDays": 30,
+    "safetyDays": 3,
+    "packSize": 1,
+    "historyDays": 3,
+    "strategy": "average"
+  },
+  "products": [
+    {
+      "id": "WB-1001",
+      "name": "Футболка базовая",
+      "stock": 100,
+      "history": [
+        { "date": "2026-10-10", "quantity": 10, "isComplete": true },
+        { "date": "2026-10-11", "quantity": 10, "isComplete": true },
+        { "date": "2026-10-12", "quantity": 10, "isComplete": true }
+      ]
+    }
+  ],
+  "deliveries": []
+}
