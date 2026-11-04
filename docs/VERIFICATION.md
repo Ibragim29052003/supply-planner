@@ -66,7 +66,8 @@ CI настроен для Release на Ubuntu, Windows и macOS; результ
 Обновление только Markdown не запускает повторную сборку кода.
 
 Скрипт scripts/publish-macos.sh создаёт self-contained single-file .app для
-osx-arm64, проверяет ad-hoc подпись codesign и CRC ZIP. Учебные примеры,
+osx-arm64 и проверяет ad-hoc подпись codesign. Для полученного ZIP отдельно
+проверен CRC. Учебные примеры,
 инструкции и SHA-256 входят в поставку, локальные состояния и архивы — нет.
 Apple Developer ID/notarization не выполнялись; на другом Mac возможен
 Gatekeeper. Распространение через ZIP не меняет сервер SellerStatus.
