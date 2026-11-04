@@ -128,4 +128,26 @@ public sealed class PlanViewAndExcelTests
         Assert.StartsWith("=HYPERLINK", book.Worksheet(1).Cell(7, 3).GetString());
         Assert.Equal("+123", book.Worksheet(1).Cell(7, 2).GetString());
     }
+    [Fact]
+    public void LongLabelsKeepNumericDatesAndVisibleRowsIgnoreHiddenExplanations()
+    {
+        var original = ProjectFiles.Example();
+        var product = original.Products[0] with { Name = new string('Т', 150), Warehouse = new string('С', 110), Article = new string('А', 55) };
+        var scenario = original with { Products = [product], Deliveries = [] };
+        var plan = new Core.SupplyPlanner().Calculate(scenario);
+        using var book = new XLWorkbook(new MemoryStream(PlanExcelExport.Create(scenario, plan)));
+        var sheet = book.Worksheet(1);
+        Assert.Equal(product.Name, sheet.Cell(7, 3).GetString());
+        Assert.True(sheet.Row(7).Height >= 7 * 15);
+        Assert.Equal("dd.mm.yyyy", sheet.Cell(7, 8).Style.DateFormat.Format);
+        Assert.Equal(new DateTime(2026, 10, 20), sheet.Cell(7, 8).GetDateTime());
+        Assert.All(book.Worksheets.SelectMany(s => s.Tables), table => Assert.False(table.ShowRowStripes));
+        var normal = ProjectFiles.Example();
+        var normalPlan = new Core.SupplyPlanner().Calculate(normal);
+        var changed = normalPlan with { Products = normalPlan.Products.Select(p => p with { Warnings = [new string('Д', 12000)] }).ToArray() };
+        using var verbose = new XLWorkbook(new MemoryStream(PlanExcelExport.Create(normal, changed)));
+        using var baseline = new XLWorkbook(new MemoryStream(PlanExcelExport.Create(normal, normalPlan)));
+        Assert.Equal(baseline.Worksheet(1).Row(7).Height, verbose.Worksheet(1).Row(7).Height);
+    }
+
 }

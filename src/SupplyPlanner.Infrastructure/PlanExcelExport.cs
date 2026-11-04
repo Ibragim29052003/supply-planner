@@ -13,6 +13,7 @@ public static class PlanExcelExport
         using var book = new XLWorkbook();
         book.Style.Font.FontName = "Arial";
         book.Style.Font.FontSize = 11;
+        book.Style.Font.FontColor = XLColor.FromHtml("#132238");
         var sheet = book.AddWorksheet("План поставок");
         Title(sheet, "SupplyPlanner · План поставок", 12);
         sheet.Range("A2:L2").Merge().Value = scenario.Name;
@@ -48,11 +49,11 @@ public static class PlanExcelExport
             { "urgent" => "#B53C4A", "healthy" => "#187C57", _ => "#315FD4" });
             row++;
         }
-        Finish(sheet, 6, row - 1, [16, 16, 30, 20, 14, 14, 16, 15, 16, 32, 18, 64]);
-        if (products.Count > 0) sheet.Range(7, 7, row - 1, 7).Style.Font.Bold = true;
-        // Основные действия помещаются рядом; технический страховой запас и пояснения можно раскрыть.
+        // Скрытые пояснения не должны растягивать видимые строки отчёта.
         sheet.Column(11).Hide();
         sheet.Column(12).Hide();
+        Finish(sheet, 6, row - 1, [16, 16, 30, 20, 14, 14, 16, 15, 16, 32, 18, 64]);
+        if (products.Count > 0) sheet.Range(7, 7, row - 1, 7).Style.Font.Bold = true;
         var warehouses = PlanOverview.ByWarehouse(products);
         if (warehouses.Count > 0)
         {
@@ -77,7 +78,9 @@ public static class PlanExcelExport
                 summaryRow++;
             }
             var summaryRange = sheet.Range(summaryTitle + 1, 1, summaryRow - 1, 8);
-            summaryRange.CreateTable("WarehouseTotals").Theme = XLTableTheme.None;
+            var warehouseTable = summaryRange.CreateTable("WarehouseTotals");
+            warehouseTable.Theme = XLTableTheme.None;
+            warehouseTable.ShowRowStripes = false;
             StyleRange(summaryRange);
             StyleHeading(sheet.Range(summaryTitle + 1, 1, summaryTitle + 1, 8));
             for (var r = summaryTitle + 2; r < summaryRow; r++)
@@ -185,6 +188,7 @@ public static class PlanExcelExport
         {
             var table = range.CreateTable();
             table.Theme = XLTableTheme.None;
+            table.ShowRowStripes = false;
             sheet.Rows(header + 1, lastRow).Height = 56;
         }
         var heading = sheet.Range(header, 1, header, widths.Length);
@@ -195,7 +199,7 @@ public static class PlanExcelExport
         sheet.ShowGridLines = false;
         for (var row = header + 1; row <= lastRow; row++)
         {
-            var lines = Enumerable.Range(1, widths.Length).Max(col =>
+            var lines = Enumerable.Range(1, widths.Length).Where(col => !sheet.Column(col).IsHidden).Max(col =>
                 Math.Ceiling(sheet.Cell(row, col).GetString().Length / (widths[col - 1] * .85)));
             sheet.Row(row).Height = Math.Max(30, lines * 15 + 8);
         }
