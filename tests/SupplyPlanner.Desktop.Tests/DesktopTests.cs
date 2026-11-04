@@ -113,6 +113,29 @@ public sealed class DesktopTests
         window.Close();
     }
     [AvaloniaFact]
+    public void ChartHoverAndClickUpdateInlineDayDetailsWithoutPopup()
+    {
+        var window = new MainWindow { Width = 1320, Height = 900 };
+        window.Show(); window.Model.Example();
+        window.Model.Selected = window.Model.Results.Single(r => r.Id == "SHIRT-KOL");
+        window.FindControl<ScrollViewer>("PlanScroll")!.Offset = new Vector(0, 450);
+        Dispatcher.UIThread.RunJobs();
+        var chart = window.FindControl<InventoryChart>("Chart")!;
+        var end = chart.TranslatePoint(new Point(chart.Bounds.Width - 14, 70), window)!.Value;
+        window.MouseMove(end);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Contains("18.11.2026", window.Model.DayInfo);
+        Assert.Contains("ожидается", window.Model.DayInfo);
+        Assert.Contains("новая поставка", window.Model.DayInfo);
+        Assert.Null(ToolTip.GetTip(chart));
+        var start = chart.TranslatePoint(new Point(42, 70), window)!.Value;
+        window.MouseDown(start, MouseButton.Left);
+        window.MouseUp(start, MouseButton.Left);
+        Assert.Contains("13.10.2026", window.Model.DayInfo);
+        Assert.Null(ToolTip.GetTip(chart));
+        window.Close();
+    }
+    [AvaloniaFact]
     public void CalculateCommandAndChartKeyboardOperateInWindow()
     {
         var window=new MainWindow(); window.Show();

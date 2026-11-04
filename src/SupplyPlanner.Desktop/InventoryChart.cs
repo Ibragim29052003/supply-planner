@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using SupplyPlanner.Core;
-using SupplyPlanner.Infrastructure;
 
 namespace SupplyPlanner.Desktop;
 
@@ -18,15 +17,23 @@ public sealed class InventoryChart : Control
     { base.OnPropertyChanged(change); if (change.Property == PlanProperty) _index = 0; }
     private void Select(int index)
     { _index = Math.Clamp(index, 0, Math.Max(0, (Plan?.Timeline.Count ?? 0) - 1)); DaySelected?.Invoke(_index); InvalidateVisual(); }
+    // Выбор дня обновляет подпись под графиком. Отдельная всплывающая подсказка не нужна.
+    private void SelectAt(double x)
+    {
+        if (Plan is not { Timeline.Count: > 0 }) return;
+        Select((int)Math.Round((x - 42) / Math.Max(1, Bounds.Width - 55) * (Plan.Timeline.Count - 1)));
+    }
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
-        if (Plan is not { Timeline.Count: > 0 }) return;
-        Select((int)Math.Round((e.GetPosition(this).X - 42) / Math.Max(1, Bounds.Width - 55) * (Plan.Timeline.Count - 1)));
-        var d = Plan.Timeline[_index];
-        ToolTip.SetTip(this, $"{d.Date:dd.MM.yyyy}\nС новой: {PlanLabels.Number(d.PlannedClosing)}\nБез новой: {PlanLabels.Number(d.BaselineClosing)}\nПоступит: {PlanLabels.Number(d.Incoming + d.RecommendedIncoming)}");
+        SelectAt(e.GetPosition(this).X);
     }
-    protected override void OnPointerPressed(PointerPressedEventArgs e) { base.OnPointerPressed(e); Focus(); }
+    protected override void OnPointerPressed(PointerPressedEventArgs e)
+    {
+        base.OnPointerPressed(e);
+        Focus();
+        SelectAt(e.GetPosition(this).X);
+    }
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);

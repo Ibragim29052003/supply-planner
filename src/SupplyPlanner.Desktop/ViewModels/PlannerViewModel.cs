@@ -117,7 +117,7 @@ public sealed class PlannerViewModel : ObservableObject
     public string DetailNote => Selected is null ? "Нажмите строку плана, чтобы увидеть прогноз." :
         $"Остаток: {Selected.Stock} шт. · спрос: {Selected.Demand} шт./день · страховой запас: {PlanLabels.Number(Selected.Value.SafetyStock)} шт.\n" + PlanOverview.Action(Selected.Value) + "\n" + string.Join(" ", Selected.Value.Warnings);
     public string DayInfo => Selected?.Value.Timeline.ElementAtOrDefault(_day) is { } d
-        ? $"{d.Date:dd.MM.yyyy}: с новой {PlanLabels.Number(d.PlannedClosing)} шт. · без новой {PlanLabels.Number(d.BaselineClosing)} шт. · потеряно {PlanLabels.Number(d.PlannedLostDemand)} шт."
+        ? $"{d.Date:dd.MM.yyyy}: с новой {PlanLabels.Number(d.PlannedClosing)} шт. · без новой {PlanLabels.Number(d.BaselineClosing)} шт. · ожидается {PlanLabels.Number(d.Incoming)} шт. · новая поставка {PlanLabels.Number(d.RecommendedIncoming)} шт. · потеряно {PlanLabels.Number(d.PlannedLostDemand)} шт."
         : "Нет дневного прогноза: уточните исходные данные.";
     public string ModelInfo => $"Начало модели: {_workspace.Scenario.StartDate:dd.MM.yyyy} · учебный снимок; реальные WB-кабинеты не подключены";
     public string Summary => $"Позиций: {Results.Count} из {_workspace.Scenario.Products.Count}   ·   К поставке: {Results.Sum(r => (long)(r.Value.RecommendedQuantity ?? 0))} шт.   ·   Без оценки: {Results.Count(r => r.Value.RecommendedQuantity is null)}";
