@@ -41,7 +41,12 @@ public static class CliRunner
             { ProjectFiles.WriteAtomic(Required("--output"), JsonSerializer.Serialize(ProjectFiles.Example(), ScenarioJson.Options), force); output.WriteLine("Пример сохранён."); return 0; }
             var input = Path.GetFullPath(Required("--input"));
             var destinations = new[] { "--output", "--excel", "--state" }.Where(options.ContainsKey).Select(k => Path.GetFullPath(options[k])).ToArray();
-            if (destinations.Distinct().Count() != destinations.Length || destinations.Contains(input)) throw new ArgumentException("Входной файл и выходные пути должны различаться.");
+            // macOS/Windows обычно не различают регистр; ссылка тоже может вести на исходный файл.
+            var comparer = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+            static string Identity(string path) => File.Exists(path) ? new FileInfo(path).ResolveLinkTarget(true)?.FullName ?? path : path;
+            var identities = destinations.Select(Identity).ToArray();
+            if (identities.Distinct(comparer).Count() != identities.Length || identities.Contains(Identity(input), comparer))
+                throw new ArgumentException("Входной файл и выходные пути должны различаться.");
             if (!force && destinations.Any(File.Exists)) throw new ArgumentException("Выходной файл уже существует. Укажите другой путь или --force.");
             var document = ProjectFiles.Read(input);
             var scenario = document.Workspace.Scenario;

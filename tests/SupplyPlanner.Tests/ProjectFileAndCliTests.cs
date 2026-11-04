@@ -66,6 +66,54 @@ public sealed class ProjectFileAndCliTests : IDisposable
         Assert.False(File.Exists(output));
         Assert.Equal(2,CliRunner.Run(["calculate","--input",input,"--wat"],TextWriter.Null,TextWriter.Null));
     }
+    [Theory]
+    [InlineData("01-base.json", 692, 132)]
+    [InlineData("02-late-delivery.json", 779, 152)]
+    [InlineData("03-early-incoming.json", 749, 152)]
+    public void DemonstrationFilesRoundTripThroughCliStateAndFilteredExcel(string file, int total, int kazan)
+    {
+        var input = Path.Combine(AppContext.BaseDirectory, "examples", file);
+        var state = FilePath("state.supply.json"); var excel = FilePath("kazan.xlsx");
+        Assert.Equal(0, CliRunner.Run(["calculate", "--input", input, "--state", state, "--warehouse", "Казань", "--excel", excel], TextWriter.Null, TextWriter.Null));
+        var loaded = ProjectFiles.Read(state);
+        Assert.Equal(total, loaded.Workspace.Plan!.Products.Sum(p => p.RecommendedQuantity));
+        Assert.Equal(5, loaded.Workspace.Scenario.Products.Count);
+        using var book = new ClosedXML.Excel.XLWorkbook(excel);
+        Assert.Equal(kazan, book.Worksheet(1).Table("WarehouseTotals").DataRange!.Cell(1, 2).GetValue<int>());
+        var second = new StringWriter();
+        Assert.Equal(0, CliRunner.Run(["calculate", "--input", state], second, TextWriter.Null));
+        Assert.Contains($"К поставке: {total}.", second.ToString());
+    }
+    [Fact]
+    public void InvalidDemonstrationFileIsRejectedWithoutCreatingOutput()
+    {
+        var input = Path.Combine(AppContext.BaseDirectory, "examples", "04-invalid-duplicate.json");
+        var output = FilePath("invalid.xlsx");
+        Assert.Throws<ArgumentException>(() => ProjectFiles.Read(input));
+        Assert.Equal(2, CliRunner.Run(["calculate", "--input", input, "--excel", output], TextWriter.Null, TextWriter.Null));
+        Assert.False(File.Exists(output));
+    }
+    [Fact]
+    public void ForceCannotOverwriteInputThroughSymbolicLink()
+    {
+        if (OperatingSystem.IsWindows()) return; // Создание ссылок в Windows может требовать отдельного права.
+        var input = FilePath("input.json");
+        CliRunner.Run(["demo", "--output", input], TextWriter.Null, TextWriter.Null);
+        var before = File.ReadAllText(input);
+        var alias = FilePath("alias.json"); File.CreateSymbolicLink(alias, input);
+        Assert.Equal(2, CliRunner.Run(["calculate", "--input", alias, "--output", input, "--force"], TextWriter.Null, TextWriter.Null));
+        Assert.Equal(before, File.ReadAllText(input));
+    }
+    [Fact]
+    public void ForceCannotOverwriteInputWithDifferentFilenameCaseOnMacAndWindows()
+    {
+        if (!OperatingSystem.IsMacOS() && !OperatingSystem.IsWindows()) return;
+        var input = FilePath("input.json");
+        CliRunner.Run(["demo", "--output", input], TextWriter.Null, TextWriter.Null);
+        var before = File.ReadAllText(input);
+        Assert.Equal(2, CliRunner.Run(["calculate", "--input", input, "--output", FilePath("INPUT.JSON"), "--force"], TextWriter.Null, TextWriter.Null));
+        Assert.Equal(before, File.ReadAllText(input));
+    }
     [Fact]
     public void SettingsPersistAndInvalidThemeIsRejected()
     {

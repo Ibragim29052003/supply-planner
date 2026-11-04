@@ -121,7 +121,7 @@ public sealed class PlannerViewModel : ObservableObject
     public string DayInfo => Selected?.Value.Timeline.ElementAtOrDefault(_day) is { } d
         ? $"{d.Date:dd.MM.yyyy}: с новой {PlanLabels.Number(d.PlannedClosing)} шт. · без новой {PlanLabels.Number(d.BaselineClosing)} шт. · ожидается {PlanLabels.Number(d.Incoming)} шт. · новая поставка {PlanLabels.Number(d.RecommendedIncoming)} шт. · потеряно {PlanLabels.Number(d.PlannedLostDemand)} шт."
         : "Нет дневного прогноза: уточните исходные данные.";
-    public string ModelInfo => $"Начало модели: {_workspace.Scenario.StartDate:dd.MM.yyyy} · учебный снимок; реальные WB-кабинеты не подключены";
+    public string ModelInfo => $"Начало модели: {_workspace.Scenario.StartDate:dd.MM.yyyy} · Источник: {_workspace.Scenario.Source}";
     public string Summary => $"Позиций: {Results.Count} из {_workspace.Scenario.Products.Count}   ·   К поставке: {Results.Sum(r => (long)(r.Value.RecommendedQuantity ?? 0))} шт.   ·   Без оценки: {Results.Count(r => r.Value.RecommendedQuantity is null)}";
     public string WarehouseSummary => string.Join("   |   ", PlanOverview.ByWarehouse(Results.Select(r => r.Value)).Select(s => $"{s.Warehouse}: {PlanLabels.Number(s.Quantity)} шт."));
     public ViewState View => new(Search, Warehouse == "Все склады" ? "" : Warehouse, _status, Sort.Id, Selected?.Id);

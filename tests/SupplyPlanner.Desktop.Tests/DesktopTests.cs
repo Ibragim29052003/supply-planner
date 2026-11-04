@@ -51,6 +51,7 @@ public sealed class DesktopTests
             var path=Path.Combine(dir,"plan.json"); vm.Save(path); Assert.False(vm.HasUnsavedChanges);
             var next=new PlannerViewModel(); next.Open(path);
             Assert.Single(next.Results); Assert.Equal("SHIRT-KZN",next.Selected!.Id); Assert.Contains("132",next.Summary);
+            Assert.Contains(next.Workspace.Scenario.Source, next.ModelInfo);
             var before=next.Workspace; File.WriteAllText(path,"bad"); Assert.False(next.Attempt(()=>next.Open(path))); Assert.Same(before,next.Workspace);
         }
         finally { Directory.Delete(dir,true); }
