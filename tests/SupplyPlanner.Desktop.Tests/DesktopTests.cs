@@ -56,6 +56,23 @@ public sealed class DesktopTests
         finally { Directory.Delete(dir,true); }
     }
     [Fact]
+    public void EmptyDemandHistoryCanBeRecalculatedAndSavedWithoutInventingDemand()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "planner-empty-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            var original = ProjectFiles.Example();
+            var scenario = original with { Products = [original.Products[0] with { History = [] }], Deliveries = [] };
+            ProjectFiles.WriteAtomic(path, System.Text.Json.JsonSerializer.Serialize(scenario, ScenarioJson.Options));
+            var vm = new PlannerViewModel(); vm.Open(path); vm.Lead = "8"; vm.Calculate();
+            Assert.Null(Assert.Single(vm.Results).Value.RecommendedQuantity);
+            Assert.Empty(Assert.Single(vm.Results).Value.Timeline);
+            vm.Save(path);
+            Assert.Empty(Assert.Single(ProjectFiles.Read(path).Workspace.Scenario.Products).History);
+        }
+        finally { File.Delete(path); }
+    }
+    [Fact]
     public void DeliveryEventsAndStrategiesUseSameCore()
     {
         var vm=new PlannerViewModel(); vm.Lead="12"; vm.Calculate();

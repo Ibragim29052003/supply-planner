@@ -19,7 +19,9 @@ public sealed class SourceRow(Product original) : ObservableObject
     public string Dates => string.Join("; ", original.History.Select(d => d.Date.ToString("dd.MM")));
     public Product Read()
     {
-        var parts = History.Split(';', StringSplitOptions.TrimEntries);
+        // Пустая история допустима: ядро вернёт «Нет оценки», а не выдуманный нулевой спрос.
+        string[] parts = original.History.Count == 0 && string.IsNullOrWhiteSpace(History)
+            ? [] : History.Split(';', StringSplitOptions.TrimEntries);
         if (parts.Length != original.History.Count) throw new ArgumentException($"{Article}, {Warehouse}: нужно {original.History.Count} значений истории через ;");
         decimal? stock = string.IsNullOrWhiteSpace(Stock) ? null : ReadNumber(Stock, "Остаток");
         var days = original.History.Select((d, i) => parts[i] == "?" ? d with { IsComplete = false }
