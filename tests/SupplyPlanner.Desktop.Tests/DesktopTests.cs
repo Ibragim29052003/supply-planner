@@ -136,6 +136,53 @@ public sealed class DesktopTests
         window.Close();
     }
     [AvaloniaFact]
+    public async Task FileButtonsSaveReloadExportCancelAndKeepWorkspaceOnPickerFailure()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "planner-buttons-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var files = new TestFileDialogs { SavePath = Path.Combine(directory, "project.supply.json"), ExcelPath = Path.Combine(directory, "report.xlsx") };
+        var window = new MainWindow(files); window.Show(); window.Model.Example();
+        void Click(string label) => window.GetVisualDescendants().OfType<Button>()
+            .Single(b => b.Content?.ToString() == label).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        try
+        {
+            window.Model.Sources.Single(s => s.Id == "SHIRT-KOL").Stock = "150";
+            Click("Сохранить…");
+            Assert.True(File.Exists(files.SavePath)); Assert.False(window.Model.HasUnsavedChanges);
+            Assert.Equal(250, window.Model.Results.Single(r => r.Id == "SHIRT-KOL").Value.RecommendedQuantity);
+            files.OpenPath = files.SavePath; Click("Открыть…");
+            Assert.Contains("642", window.Model.Summary);
+            window.Model.Warehouse = "Казань";
+            Click("Excel…");
+            var timeout = DateTime.UtcNow.AddSeconds(10);
+            while (!window.Model.Message.StartsWith("Excel сохранён") && !window.Model.IsError && DateTime.UtcNow < timeout) await Task.Delay(20);
+            Assert.StartsWith("Excel сохранён", window.Model.Message);
+            Assert.True(new FileInfo(files.ExcelPath).Length > 1000);
+            var original = window.Model.Workspace;
+            files.OpenPath = null; Click("Открыть…"); Assert.Same(original, window.Model.Workspace);
+            files.Fail = true; Click("Открыть…");
+            Assert.True(window.Model.IsError); Assert.Same(original, window.Model.Workspace);
+            Assert.Contains("Доступ", window.Model.Message);
+            files.Fail = false;
+            var scenario = original.Scenario with { StartDate = new(2026, 11, 1), Deliveries = [] };
+            var alternate = Path.Combine(directory, "november.json");
+            ProjectFiles.WriteAtomic(alternate, System.Text.Json.JsonSerializer.Serialize(scenario, ScenarioJson.Options));
+            files.OpenPath = alternate; Click("Открыть…");
+            Assert.Equal("08.11.2026", window.FindControl<TextBox>("DeliveryDate")!.Text);
+        }
+        finally { window.Close(); Directory.Delete(directory, true); }
+    }
+    private sealed class TestFileDialogs : IPlannerFileDialogs
+    {
+        public string? OpenPath { get; set; }
+        public string? SavePath { get; init; }
+        public string? ExcelPath { get; init; }
+        public bool Fail { get; set; }
+        public Task<string?> OpenProjectAsync() => Fail ? Task.FromException<string?>(new UnauthorizedAccessException("Доступ к файлу запрещён.")) : Task.FromResult(OpenPath);
+        public Task<string?> SaveProjectAsync() => Task.FromResult(SavePath);
+        public Task<string?> SaveExcelAsync() => Task.FromResult(ExcelPath);
+    }
+    [AvaloniaFact]
     public void CalculateCommandAndChartKeyboardOperateInWindow()
     {
         var window=new MainWindow(); window.Show();

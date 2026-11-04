@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using SupplyPlanner.Desktop.ViewModels;
 using SupplyPlanner.Infrastructure;
@@ -15,10 +14,13 @@ public partial class MainWindow : Window
     public PlannerViewModel Model { get; } = new();
     private readonly string _data = ProjectFiles.DataDirectory;
     private bool _allowClose, _closingDialog, _busy;
+    private readonly IPlannerFileDialogs _files;
     private string PreferencesPath => Path.Combine(_data, "preferences.json");
     private string RecoveryPath => Path.Combine(_data, "recovery.supply.json");
-    public MainWindow()
+    public MainWindow() : this(null) { }
+    public MainWindow(IPlannerFileDialogs? files)
     {
+        _files = files ?? new NativePlannerFileDialogs(this);
         AvaloniaXamlLoader.Load(this);
         DataContext = Model;
         try
@@ -32,10 +34,12 @@ public partial class MainWindow : Window
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or System.Text.Json.JsonException)
         { Model.Notify("Не удалось восстановить файл. Он оставлен на диске; открыт учебный пример. " + e.Message, true); }
         this.FindControl<InventoryChart>("Chart")!.DaySelected += Model.SelectDay;
-        this.FindControl<TextBox>("DeliveryDate")!.Text = Model.Workspace.Scenario.StartDate.AddDays(Model.Workspace.Scenario.Settings.LeadDays).ToString("dd.MM.yyyy");
+        ResetDeliveryDate();
         AddHandler(KeyDownEvent, OnShortcut, RoutingStrategies.Tunnel);
         Closing += ClosingAsync;
     }
+    private void ResetDeliveryDate() => this.FindControl<TextBox>("DeliveryDate")!.Text =
+        Model.Workspace.Scenario.StartDate.AddDays(Model.Workspace.Scenario.Settings.LeadDays).ToString("dd.MM.yyyy");
     private void CommitEdits()
     {
         var grid = this.FindControl<DataGrid>("SourceGrid")!;
@@ -60,11 +64,9 @@ public partial class MainWindow : Window
         try
         {
             CommitEdits();
-            var files = await StorageProvider.OpenFilePickerAsync(new() { Title = "Открыть проект или сценарий", AllowMultiple = false, FileTypeFilter = [new("JSON / проект") { Patterns = ["*.json"] }] });
-            if (files.Count == 0 || !await MayReplace()) return;
-            var path = files[0].TryGetLocalPath();
-            if (path is null) { Model.Notify("Выберите локальный файл.", true); return; }
-            Model.Attempt(() => Model.Open(path));
+            var path = await _files.OpenProjectAsync();
+            if (path is null || !await MayReplace()) return;
+            if (Model.Attempt(() => Model.Open(path))) ResetDeliveryDate();
         }
         catch (Exception ex) when (IsFileError(ex)) { Model.Notify("Не удалось открыть файл: " + ex.Message, true); }
         finally { _busy = false; }
@@ -77,8 +79,7 @@ public partial class MainWindow : Window
         try
         {
             CommitEdits();
-            var file = await StorageProvider.SaveFilePickerAsync(new() { Title = "Сохранить состояние проекта", SuggestedFileName = "plan.supply.json", DefaultExtension = "json", FileTypeChoices = [new("Проект SupplyPlanner") { Patterns = ["*.supply.json"] }] });
-            var path = file?.TryGetLocalPath();
+            var path = await _files.SaveProjectAsync();
             if (path is not null) Model.Attempt(() => Model.Save(path));
         }
         catch (Exception ex) when (IsFileError(ex)) { Model.Notify("Не удалось сохранить проект: " + ex.Message, true); }
@@ -92,8 +93,8 @@ public partial class MainWindow : Window
         {
             CommitEdits();
             if (Model.IsDirty) { Model.Notify("Перед экспортом нажмите «Рассчитать», чтобы применить правки.", true); return; }
-            var file = await StorageProvider.SaveFilePickerAsync(new() { Title = "Экспорт текущего списка", SuggestedFileName = "supply-plan.xlsx", DefaultExtension = "xlsx", FileTypeChoices = [new("Excel") { Patterns = ["*.xlsx"] }] });
-            var path = file?.TryGetLocalPath(); if (path is null) return;
+            var path = await _files.SaveExcelAsync();
+            if (path is null) return;
             var workspace = Model.Workspace; var query = Model.Query;
             Model.Notify("Формируется Excel…");
             var bytes = await Task.Run(() => PlanExcelExport.Create(workspace.Scenario, workspace.Plan!, query));
@@ -112,7 +113,7 @@ public partial class MainWindow : Window
     }
     private void SavePreferences() => ProjectFiles.SavePreferences(PreferencesPath, new(ActualThemeVariant == ThemeVariant.Dark ? "dark" : "light", Math.Clamp(Width,960,5000),Math.Clamp(Height,640,3000)));
     private async void ExampleClick(object? sender, RoutedEventArgs e)
-    { CommitEdits(); if (!_busy && await Confirm("Учебный пример", "Заменить текущий проект исходным примером? Сначала сохраните нужные изменения в файл.", "Открыть пример")) Model.Example(); }
+    { CommitEdits(); if (!_busy && await Confirm("Учебный пример", "Заменить текущий проект исходным примером? Сначала сохраните нужные изменения в файл.", "Открыть пример")) { Model.Example(); ResetDeliveryDate(); } }
     private void AddDeliveryClick(object? sender, RoutedEventArgs e)
     {
         CommitEdits();
